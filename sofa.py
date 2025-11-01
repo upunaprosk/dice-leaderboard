@@ -220,7 +220,11 @@ def main():
     parser.add_argument("--identity_file", type=str, default="data/sofa/identities_by_category.json")
     parser.add_argument("--batch_size", type=int, default=512)
     parser.add_argument("--max_length", type=int, default=32)
-    parser.add_argument("--gptqmodel", action="store_true")
+    parser.add_argument("--is_gptqmodel", action="store_true", help="Is the model GPTQ quantized?")
+    # parser.add_argument("--output_dir", type=str, default="results", help="Directory where to save the results.")
+    parser.add_argument("--is_vllm_quantized", action="store_true", help="Is the model AWQ quantized?")
+    parser.add_argument("--is_int4", action="store_true", help="Whether to load LLM in int4 precision (bitsandbytes).")
+    parser.add_argument("--is_int8", action="store_true", help="Whether to load LLM in int8 precision (bitsandbytes).")
     parser.add_argument("--seed",  type=int, default=42)
 
 
@@ -229,21 +233,62 @@ def main():
 
     if not os.path.exists(args.probe_file):
         logger.info("Downloading SoFA dataset in memory...")
-        ds = load_dataset("copenlu/sofa")
+        ds = load_dataset("iproskurina/sofa-500")
         df = pd.DataFrame(ds["train"])
     else:
         logger.info("Reading local probe file...")
         df = pd.read_feather(args.probe_file)
     logger.info("Loading model and tokenizer...")
-    if args.gptqmodel:
-        from gptqmodel import GPTQModel
-        model = GPTQModel.from_quantized(args.model_name, trust_remote_code=True)
+    if args.is_gptqmodel:
+        from gptqmodel import BACKEND, GPTQModel
+
+        model = GPTQModel.load(
+            args.model,
+            device_map="auto",
+            trust_remote_code=args.trust_remote_code,
+            backend=BACKEND(args.backend.lower()),
+        )
+    elif args.is_vllm_quantized:
+        from vllm import LLM
+
+        model = LLM(model=args.model,
+                    trust_remote_code=True,
+                    dtype="auto",
+                )
+    elif args.is_int4:
+        from transformers import AutoModelForCausalLM,BitsAndBytesConfig
+
+        quantization_config = BitsAndBytesConfig(load_in_4bit=True)
+
+        model = AutoModelForCausalLM.from_pretrained(args.model, device_map="auto",
+                                                     quantization_config=quantization_config)
+    elif args.is_int8:
+        from transformers import AutoModelForCausalLM, BitsAndBytesConfig
+
+        quantization_config = BitsAndBytesConfig(load_in_8bit=True)
+
+        model = AutoModelForCausalLM.from_pretrained(args.model, device_map="auto",
+                                                     quantization_config=quantization_config)
     else:
-        # half precision
-        model = AutoModelForCausalLM.from_pretrained(args.model_name, torch_dtype=torch.float16, device_map='auto')
+        from transformers import AutoModelForCausalLM
+
+        model = AutoModelForCausalLM.from_pretrained(
+            args.model,
+            device_map="auto",
+            torch_dtype="auto",
+            trust_remote_code=args.trust_remote_code,
+            offload_folder="./offload_folder/"
+        )
+    # model = model.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    # if args.gptqmodel:
+    #     from gptqmodel import GPTQModel
+    #     model = GPTQModel.from_quantized(args.model_name, trust_remote_code=True)
+    # else:
+    #     # half precision
+    #     model = AutoModelForCausalLM.from_pretrained(args.model_name, torch_dtype=torch.float16, device_map='auto')
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
-    model = model.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+
     tokenizer.pad_token = tokenizer.eos_token
     if os.path.exists('SoFa-w-LMs-PPLs.feather'):
         logger.info("Found file with computed PPLs...")

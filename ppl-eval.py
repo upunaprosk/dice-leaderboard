@@ -273,8 +273,11 @@ if __name__ == "__main__":
         default="text",
         help="Column in the dataset containing the text.",
     )
-    parser.add_argument("--is_quantized", action="store_true", help="Is the model GPTQ quantized?")
+    parser.add_argument("--is_gptqmodel", action="store_true", help="Is the model GPTQ quantized?")
     # parser.add_argument("--output_dir", type=str, default="results", help="Directory where to save the results.")
+    parser.add_argument("--is_vllm_quantized", action="store_true", help="Is the model AWQ quantized?")
+    parser.add_argument("--is_int4", action="store_true", help="Whether to load LLM in int4 precision (bitsandbytes).")
+    parser.add_argument("--is_int8", action="store_true", help="Whether to load LLM in int8 precision (bitsandbytes).")
     parser.add_argument("--use_fast_tokenizer", action="store_true", help="Whether to use fast tokenizer")
     parser.add_argument("--trust_remote_code", action="store_true", help="Whether to use remote code")
     parser.add_argument("--backend",
@@ -286,7 +289,7 @@ if __name__ == "__main__":
     if not tokenizer.pad_token_id:
         tokenizer.pad_token_id = tokenizer.eos_token_id
 
-    if args.is_quantized:
+    if args.is_gptqmodel:
         from gptqmodel import BACKEND, GPTQModel
 
         model = GPTQModel.load(
@@ -295,6 +298,27 @@ if __name__ == "__main__":
             trust_remote_code=args.trust_remote_code,
             backend=BACKEND(args.backend.lower()),
         )
+    elif args.is_vllm_quantized:
+        from vllm import LLM
+
+        model = LLM(model=args.model,
+                    trust_remote_code=True,
+                    dtype="auto",
+                )
+    elif args.is_int4:
+        from transformers import AutoModelForCausalLM,BitsAndBytesConfig
+
+        quantization_config = BitsAndBytesConfig(load_in_4bit=True)
+
+        model = AutoModelForCausalLM.from_pretrained(args.model, device_map="auto",
+                                                     quantization_config=quantization_config)
+    elif args.is_int8:
+        from transformers import AutoModelForCausalLM, BitsAndBytesConfig
+
+        quantization_config = BitsAndBytesConfig(load_in_8bit=True)
+
+        model = AutoModelForCausalLM.from_pretrained(args.model, device_map="auto",
+                                                     quantization_config=quantization_config)
     else:
         from transformers import AutoModelForCausalLM
 
@@ -316,7 +340,7 @@ if __name__ == "__main__":
     )
     all_perplexity = ppl.calculate(args.n_ctx, args.n_batch)
     average_perplexity = sum(all_perplexity) / len(all_perplexity)
-    filename = args.model.split("/")[-1]
+    filename = args.model.replace("/", "__").replace(".", "")[-1]
     print("Average ppl:")
     print(average_perplexity)
 
@@ -338,5 +362,5 @@ if __name__ == "__main__":
             f.write(json.dumps(data) + "\n")
 
 
-    save_dir = "./perplexity_eval/"
+    save_dir = "./results/"
     save_average_perplexity_as_jsonl(save_dir)
