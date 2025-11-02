@@ -31,10 +31,10 @@ def tokenize_all(texts, tokenizer, max_length, add_bos=True):
     return input_ids, attention_mask
 
 
-def compute_perplexity(texts, model, tokenizer, batch_size=64, max_length=64, device=None):
+def compute_perplexity(texts, model, tokenizer, batch_size=64, max_length=64, device=None, add_bos=True):
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    input_ids, attention_mask = tokenize_all(texts, tokenizer, max_length, add_bos=True)
+    input_ids, attention_mask = tokenize_all(texts, tokenizer, max_length, add_bos=add_bos)
     dataset = TensorDataset(input_ids, attention_mask)
     dataloader = DataLoader(dataset, batch_size=batch_size)
     loss_fct = CrossEntropyLoss(reduction="none")
@@ -85,7 +85,7 @@ def main():
         from gptqmodel import BACKEND, GPTQModel
 
         model = GPTQModel.load(
-            args.model,
+            args.model_name,
             device_map="auto",
             trust_remote_code=args.trust_remote_code,
             backend=BACKEND(args.backend.lower()),
@@ -93,7 +93,7 @@ def main():
     elif args.is_vllm_quantized:
         from vllm import LLM
 
-        model = LLM(model=args.model,
+        model = LLM(model=args.model_name,
                     trust_remote_code=True,
                     dtype="auto",
                     )
@@ -102,14 +102,14 @@ def main():
 
         quantization_config = BitsAndBytesConfig(load_in_4bit=True)
 
-        model = AutoModelForCausalLM.from_pretrained(args.model, device_map="auto",
+        model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map="auto",
                                                      quantization_config=quantization_config)
     elif args.is_int8:
         from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 
         quantization_config = BitsAndBytesConfig(load_in_8bit=True)
 
-        model = AutoModelForCausalLM.from_pretrained(args.model, device_map="auto",
+        model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map="auto",
                                                      quantization_config=quantization_config)
     else:
         from transformers import AutoModelForCausalLM
@@ -121,11 +121,14 @@ def main():
 
     pos_texts = df["positive_sentence"].tolist()
     neg_texts = df["negative_sentence"].tolist()
+    add_bos = True
+    if 'qwen' in args.model_name.lower():
+        add_bos = False
 
     logger.info("Computing perplexities for positive sentences ...")
-    pos_ppl = compute_perplexity(pos_texts, model, tokenizer, args.batch_size, args.max_length)
+    pos_ppl = compute_perplexity(pos_texts, model, tokenizer, args.batch_size, args.max_length,add_bos=add_bos)
     logger.info("Computing perplexities for negative sentences ...")
-    neg_ppl = compute_perplexity(neg_texts, model, tokenizer, args.batch_size, args.max_length)
+    neg_ppl = compute_perplexity(neg_texts, model, tokenizer, args.batch_size, args.max_length,add_bos=add_bos)
 
     df["pos_ppl"] = pos_ppl
     df["neg_ppl"] = neg_ppl

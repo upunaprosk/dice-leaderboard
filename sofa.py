@@ -32,11 +32,11 @@ def tokenize_all(texts, tokenizer, max_length, add_bos=True):
     return input_ids, attention_mask
 
 
-def compute_perplexity(texts, model, tokenizer, batch_size=512, max_length=32, device=None):
+def compute_perplexity(texts, model, tokenizer, batch_size=512, max_length=32, device=None, add_bos=True):
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    input_ids, attention_mask = tokenize_all(texts, tokenizer, max_length, add_bos=True)
+    input_ids, attention_mask = tokenize_all(texts, tokenizer, max_length, add_bos=add_bos)
     dataset = TensorDataset(input_ids, attention_mask)
     dataloader = DataLoader(dataset, batch_size=batch_size, pin_memory=True)
 
@@ -67,7 +67,10 @@ def compute_probe_ppls(data_probe, model, tokenizer, batch_size, model_name):
     logger.info("Tokenizing input stereotypes...")
     input_texts = data_probe['probe'].tolist()
     logger.info("Computing perplexities for probes...")
-    scores = compute_perplexity(input_texts, model, tokenizer, batch_size)
+    add_bos = True
+    if '`qwen' in model_name.lower():
+        add_bos = False
+    scores = compute_perplexity(input_texts, model, tokenizer, batch_size, add_bos=add_bos)
     model_name_clean = model_name.replace('/', '-')
     data_probe[model_name_clean] = scores
     logger.info("Finished computing probe perplexities.")
@@ -79,8 +82,11 @@ def compute_identity_ppls(identity_file, model, tokenizer, batch_size, model_nam
     with open(identity_file, "r") as f:
         data_dict = json.load(f)
     model_name_clean = model_name.replace('/', '-')
+    add_bos = True
+    if 'qwen' in model_name.lower():
+        add_bos = False
     for key, value in data_dict.items():
-        scores = compute_perplexity(value, model, tokenizer, batch_size)
+        scores = compute_perplexity(value, model, tokenizer, batch_size,add_bos=add_bos)
         df = pd.DataFrame({"identity": value, model_name_clean: scores})
         df.to_feather(f"{key}-identities-w-PPLs.feather")
         logger.info(f"Saved identity PPLs to {key}-identities-w-PPLs.feather")
@@ -243,15 +249,15 @@ def main():
         from gptqmodel import BACKEND, GPTQModel
 
         model = GPTQModel.load(
-            args.model,
+            args.model_name,
             device_map="auto",
-            trust_remote_code=args.trust_remote_code,
+            trust_remote_code=True,
             backend=BACKEND(args.backend.lower()),
         )
     elif args.is_vllm_quantized:
         from vllm import LLM
 
-        model = LLM(model=args.model,
+        model = LLM(model=args.model_name,
                     trust_remote_code=True,
                     dtype="auto",
                 )
@@ -260,23 +266,23 @@ def main():
 
         quantization_config = BitsAndBytesConfig(load_in_4bit=True)
 
-        model = AutoModelForCausalLM.from_pretrained(args.model, device_map="auto",
+        model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map="auto",
                                                      quantization_config=quantization_config)
     elif args.is_int8:
         from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 
         quantization_config = BitsAndBytesConfig(load_in_8bit=True)
 
-        model = AutoModelForCausalLM.from_pretrained(args.model, device_map="auto",
+        model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map="auto",
                                                      quantization_config=quantization_config)
     else:
         from transformers import AutoModelForCausalLM
 
         model = AutoModelForCausalLM.from_pretrained(
-            args.model,
+            args.model_name,
             device_map="auto",
             torch_dtype="auto",
-            trust_remote_code=args.trust_remote_code,
+            trust_remote_code=True,
             offload_folder="./offload_folder/"
         )
     # model = model.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
