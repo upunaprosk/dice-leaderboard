@@ -23,11 +23,17 @@ def tokenize_all(texts, tokenizer, max_length, add_bos=True):
     )
     input_ids = encodings["input_ids"]
     attention_mask = encodings["attention_mask"]
+
     if add_bos and tokenizer.bos_token_id is not None:
-        bos = tokenizer.bos_token_id
-        bos_tokens = torch.full((input_ids.size(0), 1), bos)
-        input_ids = torch.cat([bos_tokens, input_ids[:, :-1]], dim=1)
-        attention_mask = torch.cat([torch.ones((attention_mask.size(0), 1)), attention_mask[:, :-1]], dim=1)
+        # Only add BOS if it’s not already there
+        if not torch.all(input_ids[:, 0] == tokenizer.bos_token_id):
+            bos = tokenizer.bos_token_id
+            bos_tokens = torch.full((input_ids.size(0), 1), bos, dtype=input_ids.dtype)
+            input_ids = torch.cat([bos_tokens, input_ids[:, :-1]], dim=1)
+            attention_mask = torch.cat(
+                [torch.ones((attention_mask.size(0), 1), dtype=attention_mask.dtype),
+                attention_mask[:, :-1]], dim=1
+            )
     # if add_bos:
     #     bos = tokenizer.bos_token_id
     #     bos_tokens = torch.full((input_ids.size(0), 1), bos)
