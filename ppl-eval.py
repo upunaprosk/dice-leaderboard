@@ -340,7 +340,7 @@ if __name__ == "__main__":
     )
     all_perplexity = ppl.calculate(args.n_ctx, args.n_batch)
     average_perplexity = sum(all_perplexity) / len(all_perplexity)
-    filename = args.model.replace("/", "__").replace(".", "")[-1]
+    filename = args.model.replace("/", "_").replace(".", "")
     print("Average ppl:")
     print(average_perplexity)
 
