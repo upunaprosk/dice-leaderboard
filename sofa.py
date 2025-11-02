@@ -68,7 +68,7 @@ def compute_probe_ppls(data_probe, model, tokenizer, batch_size, model_name):
     input_texts = data_probe['probe'].tolist()
     logger.info("Computing perplexities for probes...")
     add_bos = True
-    if '`qwen' in model_name.lower():
+    if 'qwen' in model_name.lower():
         add_bos = False
     scores = compute_perplexity(input_texts, model, tokenizer, batch_size, add_bos=add_bos)
     model_name_clean = model_name.replace('/', '-')
