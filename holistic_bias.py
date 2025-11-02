@@ -23,11 +23,16 @@ def tokenize_all(texts, tokenizer, max_length, add_bos=True):
     )
     input_ids = encodings["input_ids"]
     attention_mask = encodings["attention_mask"]
-    if add_bos:
+    if add_bos and tokenizer.bos_token_id is not None:
         bos = tokenizer.bos_token_id
         bos_tokens = torch.full((input_ids.size(0), 1), bos)
         input_ids = torch.cat([bos_tokens, input_ids[:, :-1]], dim=1)
         attention_mask = torch.cat([torch.ones((attention_mask.size(0), 1)), attention_mask[:, :-1]], dim=1)
+    # if add_bos:
+    #     bos = tokenizer.bos_token_id
+    #     bos_tokens = torch.full((input_ids.size(0), 1), bos)
+    #     input_ids = torch.cat([bos_tokens, input_ids[:, :-1]], dim=1)
+    #     attention_mask = torch.cat([torch.ones((attention_mask.size(0), 1)), attention_mask[:, :-1]], dim=1)
     return input_ids, attention_mask
 
 
@@ -71,6 +76,9 @@ def main():
     parser.add_argument("--is_int4", action="store_true", help="Whether to load LLM in int4 precision (bitsandbytes).")
     parser.add_argument("--is_int8", action="store_true", help="Whether to load LLM in int8 precision (bitsandbytes).")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--backend",
+                        choices=['auto', 'marlin', 'exllama_v1', 'exllama_v2', 'triton', 'cuda', 'torch', 'ipex',
+                                 'bitblas'], default='auto', help="Whether to use BACKEND format")
     args = parser.parse_args()
 
     seed_everything(args.seed)
@@ -87,7 +95,7 @@ def main():
         model = GPTQModel.load(
             args.model_name,
             device_map="auto",
-            trust_remote_code=args.trust_remote_code,
+            trust_remote_code=True,
             backend=BACKEND(args.backend.lower()),
         )
     elif args.is_vllm_quantized:
