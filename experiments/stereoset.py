@@ -115,7 +115,9 @@ parser.add_argument("--is_int4", action="store_true",
                     help="Whether to load LLM in int4 precision (bitsandbytes).")
 parser.add_argument("--is_int8", action="store_true",
                     help="Whether to load LLM in int8 precision (bitsandbytes).")
-
+parser.add_argument("--backend",
+                        choices=['auto', 'marlin', 'exllama_v1', 'exllama_v2', 'triton', 'cuda', 'torch', 'ipex',
+                                 'bitblas'], default='auto', help="Whether to use BACKEND format")
 if __name__ == "__main__":
     args = parser.parse_args()
 
