@@ -106,6 +106,15 @@ parser.add_argument(
     default=None,
     help="Pythia model cache directory e.g. /home/username/.cache/pythia"
 )
+parser.add_argument("--is_gptqmodel", action="store_true",
+                    help="Is the model GPTQ quantized?")
+# parser.add_argument("--output_dir", type=str, default="results", help="Directory where to save the results.")
+parser.add_argument("--is_vllm_quantized", action="store_true",
+                    help="Is the model AWQ quantized?")
+parser.add_argument("--is_int4", action="store_true",
+                    help="Whether to load LLM in int4 precision (bitsandbytes).")
+parser.add_argument("--is_int8", action="store_true",
+                    help="Whether to load LLM in int8 precision (bitsandbytes).")
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -132,8 +141,38 @@ if __name__ == "__main__":
 
 
     if args.is_quantized:
-        from gptqmodel import GPTQModel
-        model = GPTQModel.from_quantized(args.model_name_or_path, trust_remote_code=True)
+        if args.is_gptqmodel:
+            from gptqmodel import BACKEND, GPTQModel
+
+            model = GPTQModel.load(
+                args.model_name,
+                device_map="auto",
+                trust_remote_code=True,
+                backend=BACKEND(args.backend.lower()),
+            )
+        elif args.is_vllm_quantized:
+            from vllm import LLM
+
+            model = LLM(model=args.model_name,
+                        trust_remote_code=True,
+                        dtype="auto",
+                        )
+        elif args.is_int4:
+            from transformers import AutoModelForCausalLM, BitsAndBytesConfig
+
+            quantization_config = BitsAndBytesConfig(load_in_4bit=True)
+
+            model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map="auto",
+                                                         quantization_config=quantization_config)
+        elif args.is_int8:
+            from transformers import AutoModelForCausalLM, BitsAndBytesConfig
+
+            quantization_config = BitsAndBytesConfig(load_in_8bit=True)
+
+            model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map="auto",
+                                                         quantization_config=quantization_config)
+        # from gptqmodel import GPTQModel
+        # model = GPTQModel.from_quantized(args.model_name_or_path, trust_remote_code=True)
     else:
         if args.quant_prec is not None and args.quant_type is not None:
             if args.revision is None:
