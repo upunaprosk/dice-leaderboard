@@ -147,7 +147,7 @@ if __name__ == "__main__":
             from gptqmodel import BACKEND, GPTQModel
 
             model = GPTQModel.load(
-                args.model_name,
+                args.model_name_or_path,
                 device_map="auto",
                 trust_remote_code=True,
                 backend=BACKEND(args.backend.lower()),
@@ -155,7 +155,7 @@ if __name__ == "__main__":
         elif args.is_vllm_quantized:
             from vllm import LLM
 
-            model = LLM(model=args.model_name,
+            model = LLM(model=args.model_name_or_path,
                         trust_remote_code=True,
                         dtype="auto",
                         )
@@ -164,14 +164,14 @@ if __name__ == "__main__":
 
             quantization_config = BitsAndBytesConfig(load_in_4bit=True)
 
-            model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map="auto",
+            model = AutoModelForCausalLM.from_pretrained(args.model_name_or_path, device_map="auto",
                                                          quantization_config=quantization_config)
         elif args.is_int8:
             from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 
             quantization_config = BitsAndBytesConfig(load_in_8bit=True)
 
-            model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map="auto",
+            model = AutoModelForCausalLM.from_pretrained(args.model_name_or_path, device_map="auto",
                                                          quantization_config=quantization_config)
         # from gptqmodel import GPTQModel
         # model = GPTQModel.from_quantized(args.model_name_or_path, trust_remote_code=True)
