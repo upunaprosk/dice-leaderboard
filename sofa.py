@@ -10,60 +10,30 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from datasets import load_dataset
 from tqdm import tqdm
 from utils import *
+from evaluate_perplexity import *
 
 logger = set_logger(logging.INFO)
 
-
-def tokenize_all(texts, tokenizer, max_length, add_bos=True):
-    encodings = tokenizer(
-        texts,
-        add_special_tokens=False,
-        padding=True,
-        return_tensors="pt",
-        return_attention_mask=True)
-    input_ids = encodings["input_ids"]
-    attention_mask = encodings["attention_mask"]
-    return input_ids, attention_mask
-
-def compute_perplexity(texts, model, tokenizer, batch_size=512, max_length=32, device=None, add_bos=True):
-    if device is None:
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    input_ids, attention_mask = tokenize_all(texts, tokenizer, max_length, add_bos=add_bos)
-    dataset = TensorDataset(input_ids, attention_mask)
-    dataloader = DataLoader(dataset, batch_size=batch_size, pin_memory=True)
-
-    loss_fct = CrossEntropyLoss(reduction="none")
-    perplexities = []
-
-    model.eval()
-    with torch.no_grad():
-        for input_ids, attention_mask in tqdm(dataloader, desc="Computing perplexity"):
-            input_ids = input_ids.to(device)
-            attention_mask = attention_mask.to(device)
-            labels = input_ids.clone()
-            outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-            logits = outputs.logits
-            shift_logits = logits[..., :-1, :].contiguous()
-            shift_labels = labels[..., 1:].contiguous()
-            shift_mask = attention_mask[..., 1:].contiguous()
-            loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
-            loss = loss.view(shift_labels.size()) * shift_mask
-            loss = loss.sum(1) / shift_mask.sum(1)
-            batch_ppl = torch.exp(loss)
-            perplexities.extend(batch_ppl.tolist())
-
-    return [round(p, 5) for p in perplexities]
 
 
 def compute_probe_ppls(data_probe, model, tokenizer, batch_size, model_name):
     logger.info("Tokenizing input stereotypes...")
     input_texts = data_probe['probe'].tolist()
     logger.info("Computing perplexities for probes...")
-    add_bos = True
-    if 'qwen' in model_name.lower():
-        add_bos = False
-    scores = compute_perplexity(input_texts, model, tokenizer, batch_size, add_bos=add_bos)
+    metric = Perplexity()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    scores = metric._compute(
+        predictions=input_texts,
+        model=model,
+        tokenizer=tokenizer,
+        batch_size=batch_size,
+        add_start_token=True,
+        device=device
+    )["perplexities"]
+    # add_bos = True
+    # if 'qwen' in model_name.lower():
+    #     add_bos = False
+    # scores = compute_perplexity(input_texts, model, tokenizer, batch_size, add_bos=add_bos)
     model_name_clean = model_name.replace('/', '-')
     data_probe[model_name_clean] = scores
     logger.info("Finished computing probe perplexities.")
@@ -75,11 +45,21 @@ def compute_identity_ppls(identity_file, model, tokenizer, batch_size, model_nam
     with open(identity_file, "r") as f:
         data_dict = json.load(f)
     model_name_clean = model_name.replace('/', '-')
-    add_bos = True
-    if 'qwen' in model_name.lower():
-        add_bos = False
+    metric = Perplexity()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     for key, value in data_dict.items():
-        scores = compute_perplexity(value, model, tokenizer, batch_size,add_bos=add_bos)
+        scores = metric._compute(
+            predictions=value,
+            model=model,
+            tokenizer=tokenizer,
+            batch_size=batch_size,
+            add_start_token=True,
+            device=device
+        )["perplexities"]
+        #
+        # print("Mean PPL:", results["mean_perplexity"])
+        # print("Per-text PPLs:", results["perplexities"])
+        # scores = compute_perplexity(value, model, tokenizer, batch_size,add_bos=add_bos)
         df = pd.DataFrame({"identity": value, model_name_clean: scores})
         df.to_feather(f"{key}-identities-w-PPLs.feather")
         logger.info(f"Saved identity PPLs to {key}-identities-w-PPLs.feather")
@@ -289,7 +269,6 @@ def main():
     #     model = AutoModelForCausalLM.from_pretrained(args.model_name, torch_dtype=torch.float16, device_map='auto')
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
-
     tokenizer.pad_token = tokenizer.eos_token
     if os.path.exists('SoFa-w-LMs-PPLs.feather'):
         logger.info("Found file with computed PPLs...")
