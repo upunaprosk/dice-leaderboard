@@ -17,7 +17,6 @@ logger = set_logger(logging.INFO)
 def tokenize_all(texts, tokenizer, max_length, add_bos=True):
     encodings = tokenizer(
         texts,
-        truncation=True,
         add_special_tokens=False,
         padding=True,
         return_tensors="pt",
