@@ -17,30 +17,13 @@ def tokenize_all(texts, tokenizer, max_length, add_bos=True):
     encodings = tokenizer(
         texts,
         truncation=True,
-        max_length=max_length - 1 if add_bos else max_length,
-        padding="max_length",
-        return_tensors="pt"
-    )
+        add_special_tokens=False,
+        padding=True,
+        return_tensors="pt",
+        return_attention_mask=True)
     input_ids = encodings["input_ids"]
     attention_mask = encodings["attention_mask"]
-
-    if add_bos and tokenizer.bos_token_id is not None:
-        # Only add BOS if it’s not already there
-        if not torch.all(input_ids[:, 0] == tokenizer.bos_token_id):
-            bos = tokenizer.bos_token_id
-            bos_tokens = torch.full((input_ids.size(0), 1), bos, dtype=input_ids.dtype)
-            input_ids = torch.cat([bos_tokens, input_ids[:, :-1]], dim=1)
-            attention_mask = torch.cat(
-                [torch.ones((attention_mask.size(0), 1), dtype=attention_mask.dtype),
-                attention_mask[:, :-1]], dim=1
-            )
-    # if add_bos:
-    #     bos = tokenizer.bos_token_id
-    #     bos_tokens = torch.full((input_ids.size(0), 1), bos)
-    #     input_ids = torch.cat([bos_tokens, input_ids[:, :-1]], dim=1)
-    #     attention_mask = torch.cat([torch.ones((attention_mask.size(0), 1)), attention_mask[:, :-1]], dim=1)
     return input_ids, attention_mask
-
 
 def compute_perplexity(texts, model, tokenizer, batch_size=64, max_length=64, device=None, add_bos=True):
     if device is None:
@@ -66,7 +49,7 @@ def compute_perplexity(texts, model, tokenizer, batch_size=64, max_length=64, de
             loss = loss.sum(1) / shift_mask.sum(1)
             batch_ppl = torch.exp(loss)
             perplexities.extend(batch_ppl.tolist())
-    return [round(p, 3) for p in perplexities]
+    return [round(p, 5) for p in perplexities]
 
 
 def main():
@@ -127,7 +110,7 @@ def main():
                                                      quantization_config=quantization_config)
     else:
         from transformers import AutoModelForCausalLM
-        model = AutoModelForCausalLM.from_pretrained(args.model_name, torch_dtype=torch.float16, device_map="auto")
+        model = AutoModelForCausalLM.from_pretrained(args.model_name, dtype="auto",device_map="auto")
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
     if not tokenizer.pad_token:
