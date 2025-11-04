@@ -27,7 +27,6 @@ def compute_probe_ppls(data_probe, model, tokenizer, batch_size, model_name):
         model=model,
         tokenizer=tokenizer,
         batch_size=batch_size,
-        add_start_token=True,
         device=device
     )["perplexities"]
     # add_bos = True
@@ -53,7 +52,6 @@ def compute_identity_ppls(identity_file, model, tokenizer, batch_size, model_nam
             model=model,
             tokenizer=tokenizer,
             batch_size=batch_size,
-            add_start_token=True,
             device=device
         )["perplexities"]
         #
@@ -257,8 +255,6 @@ def main():
             args.model_name,
             device_map="auto",
             torch_dtype="auto",
-            trust_remote_code=True,
-            offload_folder="./offload_folder/"
         )
     # model = model.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     # if args.gptqmodel:
@@ -269,7 +265,14 @@ def main():
     #     model = AutoModelForCausalLM.from_pretrained(args.model_name, torch_dtype=torch.float16, device_map='auto')
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
-    tokenizer.pad_token = tokenizer.eos_token
+    if tokenizer.pad_token is None and args.batch_size > 1:
+        existing_special_tokens = list(tokenizer.special_tokens_map_extended.values())
+        # check that the model already has at least one special token defined
+        assert (
+                len(existing_special_tokens) > 0
+        ), "If batch_size > 1, model must have at least one special token to use for padding. Please use a different model or set batch_size=1."
+        # assign one of the special tokens to also be the pad token
+        tokenizer.add_special_tokens({"pad_token": existing_special_tokens[0]})
     if os.path.exists('SoFa-w-LMs-PPLs.feather'):
         logger.info("Found file with computed PPLs...")
         df = pd.read_feather('SoFa-w-LMs-PPLs.feather')
