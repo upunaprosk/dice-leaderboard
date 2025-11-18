@@ -127,6 +127,7 @@ def fmt_moral_count(v):
 def main():
     parser = argparse.ArgumentParser(description="Parse evaluation results and produce CSV row for ethics leaderboard.")
     parser.add_argument("--model", type=str, required=True)
+    parser.add_argument("--base_model", type=str, required=True)
     parser.add_argument("--results_dir", type=str, default="lm-evaluation-harness/results")
     parser.add_argument("--output_dir", type=str, default="./results")
     parser.add_argument("--csv_out", type=str, default="combined_results.csv")
@@ -137,6 +138,8 @@ def main():
 
     model_id = args.model
     model_passed = model_id.replace("/", "__")
+    base_model_short = args.base_model.split("/")[-1] + "-Q"
+
     results_dir = os.path.join(args.results_dir, model_passed)
     result_files = glob(os.path.join(results_dir, "*.json"))
 
@@ -196,7 +199,7 @@ def main():
 
     row = [
         symbol,
-        model_id.split("/")[-1],
+        base_model_short,
         comp,
         fmt_ppl(ppl),
         fmt_pct(ethics),

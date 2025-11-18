@@ -117,6 +117,7 @@ def fmt_score(value, scale=True):
 def main():
     parser = argparse.ArgumentParser(description="Parse evaluation results and produce CSV row.")
     parser.add_argument("--model", type=str, required=True)
+    parser.add_argument("--base_model", type=str, required=True)
     parser.add_argument("--results_dir", type=str, default="lm-evaluation-harness/results")
     parser.add_argument("--output_dir", type=str, default="./results")
     parser.add_argument("--csv_out", type=str, default="combined_results.csv")
@@ -126,6 +127,8 @@ def main():
     args = parser.parse_args()
 
     model_id = args.model
+    base_model_short = args.base_model.split("/")[-1] + "-Q"
+
     model_passed = model_id.replace("/", "__")
     results_dir = os.path.join(args.results_dir, model_passed)
     result_files = glob(os.path.join(results_dir, "*.json"))
@@ -207,7 +210,7 @@ def main():
 
     row = [
         symbol,
-        model_id.split("/")[-1],
+        base_model_short,
         comp,
         ppl_str,
         hs_str,
