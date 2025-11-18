@@ -1,73 +1,67 @@
 # Dice-Leaderboard
-Code for evaluating LLMs in the Diké (Dice) leaderboard
 
-Leaderboard contains the following metrics:
-1) LLM performance on zero-shot benchmarks and ppl on wikitext-2 data.
-2) Fairness: monolingual and multilingual
-3) Ethics
-4) Toxicity
-5) Calibration
-6) Efficiency metrics for quantized LLMs
+Code for evaluating LLMs in the Diké (Dice) leaderboard:  
+https://huggingface.co/spaces/iproskurina/dike-leaderboard
 
-## Perplexity Evaluation
+This repository provides tools to evaluate your model and format the results for submission. There are two types of models supported:
 
-We evaluate perplexity on WikiText-2. 
-To evaluate the perplexity of a `model` that has been quantized, run the following command:
+- **Instruct models**
+- **Non-instruct (base) models**
+
+## Installation
 
 ```bash
-ppl_eval.py --model "$model" --backend auto --is_gptqmodel
+git clone https://github.com/upunaprosk/dice-leaderboard.git
+cd dice-leaderboard
+pip install -r requirements.txt
+pip install datasets colorama logbar
 ```
-Other supported arguments: `is_vllm_quantized` (model quantized with vllm), `is_int4` (bitsandbytes quantization), `is_int8` (bitsandbytes quantization).
 
-## LM-Eval-Harness
+Additional dependencies depending on model type:
 
-For general LLM performance evaluation and fairness evaluation (`bbq, simple_cooccurrence_bias,winogender,crows_pairs_english`), we use the EleutherAI lm-evaluation-harness:
+- **GPTQ models**
+  ```bash
+  pip install gptqmodel
+  ```
+
+- **Models compressed with vLLM or stored in vLLM format**
+  ```bash
+  pip install vllm llm-compressor
+  ```
+
+- **Models quantized with bitsandbytes**
+  ```bash
+  pip install bitsandbytes
+  ```
+
+## Evaluating Non-Instruct Models
+
 ```bash
-# Clone lm-evaluation-harness and install dependencies
-git clone --depth 1 https://github.com/EleutherAI/lm-evaluation-harness.git
+git clone https://github.com/upunaprosk/lm-evaluation-harness.git
 cd lm-evaluation-harness
-pip install -e ".[gptqmodel]"
+pip install -e .
+cd ..
 
-# Define model arguments
-model_args="pretrained=$repo_id,gptqmodel=True"
+chmod +x run_eval.sh
 
-# Run lm_eval command for evaluation
-lm_eval --model hf --model_args $model_args --device cuda:0 \
-  --tasks bbq,arc_easy,openbookqa,xstorycloze_en,hellaswag,piqa,arc_challenge,simple_cooccurrence_bias,winogender,crows_pairs_english
-  --batch_size 8 --write_out --log_samples --output_path ./results/ --trust_remote_code --seed 42
+# Example GPTQ model evaluation
+bash run_eval.sh iproskurina/opt-350m-int4-tb --gptq
+
+python base_model_evaluation.py    --model iproskurina/Llama-3.1-8B-gptqmodel-4bit    --is_gptqmodel    --use_fast_tokenizer    --trust_remote_code
 ```
 
-## Fairness Evaluation
+## Evaluating Instruct Models
 
-`python sofa.py --model_name "$model" --is_gptqmodel`
-`python holistic_bias.py --model_name "$model" --is_gptqmodel`
+```bash
+git clone https://github.com/upunaprosk/lm-evaluation-harness.git
+cd lm-evaluation-harness
+pip install -e .
+cd ..
 
+chmod +x run_eval_instruct.sh
 
-```angular2html
-from unqover import *
-from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
-model_name = "meta-llama/Llama-3.2-1B"
+# Example GPTQ instruct model evaluation
+bash run_eval_instruct.sh model --gptq
 
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name, low_cpu_mem_usage=True, torch_dtype=torch.float16,  device_map='auto')
-
-tokenizer.pad_token = tokenizer.eos_token
-
-tag_split = model_name.split("/")
-tag = tag_split[-1].replace(".", "").replace("-", "_")
-unqover_evaluate(
-    tag=tag,
-    component=tag+"_baseline",
-    model=model,
-    tokenizer=tokenizer,
-    few_shot=True,
-    persistent_dir="./results",
-    device=device,
-    baseline=True,
-    verbose=False
-)
-
+python instruct_model_evaluation.py    --model model_name    --is_gptqmodel    --use_fast_tokenizer    --trust_remote_code
 ```
-
-Other supported arguments: `is_vllm_quantized` (model quantized with vllm), `is_int4` (bitsandbytes quantization), `is_int8` (bitsandbytes quantization).
