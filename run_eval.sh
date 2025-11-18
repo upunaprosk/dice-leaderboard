@@ -109,7 +109,7 @@ else
 fi
 
 python experiments/stereoset_evaluation.py --file_name test.json
-
+cd ..
 # -----------------------------
 # LLM-Evaluaton-Harness
 # -----------------------------
