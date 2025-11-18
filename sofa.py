@@ -186,7 +186,7 @@ def compute_sofa_score(df_probes, model, model_name):
     table2 = pd.DataFrame(data, columns=cols)
     logger.info(table2)
     path = f'./{model_name_clean}-'
-    os.makedirs(path, exist_ok=True)
+    # os.makedirs(path, exist_ok=True)
     table2.reset_index(drop=True).to_feather(path + 'results.feather')
     logger.info("Saved Results to " + path + 'results.feather')
     return aggregated_score_single
