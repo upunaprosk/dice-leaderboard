@@ -35,7 +35,7 @@ log_file="evaluation.log"
 We evaluate perplexity on WikiText-2. To evaluate the perplexity of a `model` that has been quantized, run the following command:
 
 ```bash
-ppl-eval.py --model "$model" --backend auto --is_quantized
+ppl_eval.py --model "$model" --backend auto --is_quantized
 ```
 
 ## Stereotype-bias Scores (Stereoset)

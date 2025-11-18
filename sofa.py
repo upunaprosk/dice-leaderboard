@@ -117,6 +117,8 @@ def compute_sofa_score(df_probes, model, model_name):
         res = {key: round(value, 3) for key, value in res.items()}
         res = dict(sorted(res.items(), key=lambda item: item[1], reverse=True))
         logger.info(res)
+        if aggregated:
+            return res[LM]
         return res
 
     def top(df, category, col, k=100, lowest=True):
@@ -169,7 +171,7 @@ def compute_sofa_score(df_probes, model, model_name):
         df_category = df[df['category'] == category]
         variances[category] = rank_variance(df_category)
     logger.info('\n - AGGREGATED -')
-    rank_variance(df, True, variances)
+    aggregated_score_single = rank_variance(df, True, variances)
     logger.info('\n\n\n\n ---- PER CATEGORY ----')
     data = []
     cats_test = []
@@ -187,7 +189,7 @@ def compute_sofa_score(df_probes, model, model_name):
     os.makedirs(path, exist_ok=True)
     table2.reset_index(drop=True).to_feather(path + 'results.feather')
     logger.info("Saved Results to " + path + 'results.feather')
-    return
+    return aggregated_score_single
 
 
 def main():

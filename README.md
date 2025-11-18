@@ -15,7 +15,7 @@ We evaluate perplexity on WikiText-2.
 To evaluate the perplexity of a `model` that has been quantized, run the following command:
 
 ```bash
-ppl-eval.py --model "$model" --backend auto --is_gptqmodel
+ppl_eval.py --model "$model" --backend auto --is_gptqmodel
 ```
 Other supported arguments: `is_vllm_quantized` (model quantized with vllm), `is_int4` (bitsandbytes quantization), `is_int8` (bitsandbytes quantization).
 
@@ -40,7 +40,6 @@ lm_eval --model hf --model_args $model_args --device cuda:0 \
 ## Fairness Evaluation
 
 `python sofa.py --model_name "$model" --is_gptqmodel`
-`python holistic_bias.py --model_name "$model" --is_gptqmodel`
 `python holistic_bias.py --model_name "$model" --is_gptqmodel`
 
 

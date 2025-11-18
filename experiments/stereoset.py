@@ -205,9 +205,8 @@ if __name__ == "__main__":
     results = runner()
 
     os.makedirs(f"{args.persistent_dir}/results/stereoset", exist_ok=True)
-    safe_experiment_id = experiment_id.replace("/", "_")
     with open(
-        f"{args.persistent_dir}/results/stereoset/{safe_experiment_id}.json", "w"
+        f"{args.persistent_dir}/results/stereoset/evaluation.json", "w"
     ) as f:
         json.dump(results, f, indent=2)
     sys.exit(0)

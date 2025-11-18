@@ -299,12 +299,23 @@ if __name__ == "__main__":
             backend=BACKEND(args.backend.lower()),
         )
     elif args.is_vllm_quantized:
-        from vllm import LLM
+        # from vllm import LLM
+        #
+        # model = LLM(model=args.model,
+        #             trust_remote_code=True,
+        #             dtype="auto",
+        #         )
+        # vLLM class does not support  outputs.logits
+        # Link: https://docs.vllm.ai/en/latest/design/huggingface_integration/
 
-        model = LLM(model=args.model,
-                    trust_remote_code=True,
-                    dtype="auto",
-                )
+        from transformers import AutoModelForCausalLM
+
+        model = AutoModelForCausalLM.from_pretrained(
+            args.model,
+            device_map="auto",
+            trust_remote_code=args.trust_remote_code,
+            offload_folder="./offload_folder/"
+        )
     elif args.is_int4:
         from transformers import AutoModelForCausalLM,BitsAndBytesConfig
 

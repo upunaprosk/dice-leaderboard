@@ -232,23 +232,27 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     print("Evaluating StereoSet files:")
-    print(f" - predictions_file: {args.predictions_file}")
-    print(f" - predictions_dir: {args.predictions_dir}")
-    print(f" - output_file: {args.output_file}")
+    print(f" - predictions_file: {args.persistent_dir}/results/stereoset/evaluation.json")
+    # print(f" - predictions_dir: {args.predictions_dir}")
+    # print(f" - output_file: {args.output_file}")
 
-    if args.predictions_dir is not None:
-        predictions_dir = args.predictions_dir
-        if args.predictions_dir[-1] != "/":
-            predictions_dir = args.predictions_dir + "/"
-        for prediction_file in glob.glob(predictions_dir + "*.json"):
-            print()
-            print(f"Evaluating {prediction_file}...")
-            parse_file(
-                f"{args.persistent_dir}/data/stereoset/{args.file_name}", prediction_file
-            )
-    else:
-        parse_file(
-            f"{args.persistent_dir}/data/stereoset/{args.file_name}", args.predictions_file
-        )
+    parse_file(
+        f"{args.persistent_dir}/data/stereoset/{args.file_name}", f"{args.persistent_dir}/results/stereoset/evaluation.json"
+    )
+    #
+    # if args.predictions_dir is not None:
+    #     predictions_dir = args.predictions_dir
+    #     if args.predictions_dir[-1] != "/":
+    #         predictions_dir = args.predictions_dir + "/"
+    #     for prediction_file in glob.glob(predictions_dir + "*.json"):
+    #         print()
+    #         print(f"Evaluating {prediction_file}...")
+    #         parse_file(
+    #             f"{args.persistent_dir}/data/stereoset/{args.file_name}", prediction_file
+    #         )
+    # else:
+    #     parse_file(
+    #         f"{args.persistent_dir}/data/stereoset/{args.file_name}", args.predictions_file
+    #     )
 
     sys.exit(0)
