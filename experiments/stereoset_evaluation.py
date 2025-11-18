@@ -195,15 +195,7 @@ def parse_file(gold_file, predictions_file):
     overall = score_evaluator.get_overall_results()
     score_evaluator.pretty_print(overall)
 
-    if args.output_file:
-        output_file = args.output_file
-    elif args.predictions_dir != None:
-        predictions_dir = args.predictions_dir
-        if predictions_dir[-1] == "/":
-            predictions_dir = predictions_dir[:-1]
-        output_file = f"{predictions_dir}.json"
-    else:
-        output_file = "results.json"
+    output_file = "stereoset_results.json"
 
     if os.path.exists(output_file):
         with open(output_file, "r") as f:
