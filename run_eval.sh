@@ -36,7 +36,7 @@ set -e
 model="$1"
 
 if [[ -z "$model" ]]; then
-  echo "❌ Model parameter is required!"
+  echo "Model parameter is required!"
   echo "Usage: ./run_all.sh <model_name> [--gptq] [--vllm] [--int4] [--int8]"
   exit 1
 fi
