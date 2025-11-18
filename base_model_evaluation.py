@@ -25,16 +25,12 @@ def save_json(data, path):
 
 if __name__ == "__main__":
 
-    # ----------------------------------------------------------
-    # ONE ARGUMENT PARSER FOR THE WHOLE PROGRAM
-    # ----------------------------------------------------------
     parser = argparse.ArgumentParser(description="Evaluate Model on Wiki2, Holistic Bias and SoFA.")
 
     parser.add_argument("--model", type=str, default="ModelCloud/Llama-3.2-1B-Instruct-gptqmodel-4bit-vortex-v2.5")
     parser.add_argument("--tasks", type=str,
                         default="wiki_2,bbq,crows_pairs_english,hellaswag,holistic_bias,stereoset,sofa")
 
-    # Quantization
     parser.add_argument("--is_gptqmodel", action="store_true")
     parser.add_argument("--is_vllm_quantized", action="store_true")
     parser.add_argument("--is_int4", action="store_true")
@@ -48,7 +44,6 @@ if __name__ == "__main__":
                                  'triton', 'cuda', 'torch', 'ipex', 'bitblas'],
                         default='auto')
 
-    # PPL params
     parser.add_argument("--n_ctx", type=int, default=1024)
     parser.add_argument("--n_batch", type=int, default=1024)
     parser.add_argument("--dataset_path", type=str, default="wikitext")
@@ -56,22 +51,17 @@ if __name__ == "__main__":
     parser.add_argument("--split", type=str, default="test")
     parser.add_argument("--text_column", type=str, default="text")
 
-    # Holistic Bias
     parser.add_argument("--hb_dataset", type=str, default="iproskurina/holisticbias-sentiment-pairs")
     parser.add_argument("--hb_batch", type=int, default=64)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output_dir", type=str, default="./results")
 
-    # SoFA
     parser.add_argument("--probe_file", type=str, default="data/sofa/SBIC-Pro.feather")
     parser.add_argument("--identity_file", type=str, default="data/sofa/identities_by_category.json")
     parser.add_argument("--sofa_batch", type=int, default=512)
 
     args = parser.parse_args()
 
-    # ----------------------------------------------------------
-    # LOAD TOKENIZER
-    # ----------------------------------------------------------
     tokenizer = AutoTokenizer.from_pretrained(
         args.model,
         use_fast=args.use_fast_tokenizer,
@@ -80,9 +70,6 @@ if __name__ == "__main__":
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token_id = tokenizer.eos_token_id
 
-    # ----------------------------------------------------------
-    # LOAD MODEL (one time)
-    # ----------------------------------------------------------
     if args.is_gptqmodel:
         from gptqmodel import BACKEND, GPTQModel
         model = GPTQModel.load(
@@ -121,9 +108,6 @@ if __name__ == "__main__":
             trust_remote_code=args.trust_remote_code,
         )
 
-    # ----------------------------------------------------------
-    # 1. PERPLEXITY (WikiText)
-    # ----------------------------------------------------------
     ppl = PPL_Perplexity(
         model,
         tokenizer,
@@ -142,9 +126,6 @@ if __name__ == "__main__":
 
     print("Average ppl:", average_perplexity)
 
-    # ----------------------------------------------------------
-    # 2. HOLISTIC BIAS
-    # ----------------------------------------------------------
     seed_everything(args.seed)
     os.makedirs(args.output_dir, exist_ok=True)
 
@@ -167,11 +148,6 @@ if __name__ == "__main__":
     evaluation_results["holistic_bias"] = float(overall_bias_share)
     print("Holistic Bias Score:", overall_bias_share)
 
-    # df.to_csv(os.path.join(args.output_dir, "holistic_bias_full.csv"), index=False)
-
-    # ----------------------------------------------------------
-    # 3. SOFA
-    # ----------------------------------------------------------
     if os.path.exists(args.probe_file):
         df_sofa = pd.read_feather(args.probe_file)
     else:
@@ -184,9 +160,7 @@ if __name__ == "__main__":
 
     evaluation_results["sofa"] = float(score)
     print("SOFA Score:", score)
-    # ----------------------------------------------------------
-    # SAVE RESULTS
-    # ----------------------------------------------------------
+
     out_file = os.path.join(
         args.output_dir,
         args.model.replace("/", "_").replace(".", "_") + "_results.json"
