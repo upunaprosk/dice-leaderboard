@@ -165,8 +165,9 @@ if __name__ == "__main__":
 
     overall_bias_share = df["bias_flag"].mean()
     evaluation_results["holistic_bias"] = float(overall_bias_share)
+    print("Holistic Bias Score:", overall_bias_share)
 
-    df.to_csv(os.path.join(args.output_dir, "holistic_bias_full.csv"), index=False)
+    # df.to_csv(os.path.join(args.output_dir, "holistic_bias_full.csv"), index=False)
 
     # ----------------------------------------------------------
     # 3. SOFA
@@ -178,10 +179,11 @@ if __name__ == "__main__":
         df_sofa = pd.DataFrame(ds["train"])
 
     df_sofa = compute_probe_ppls(df_sofa, model, tokenizer, args.sofa_batch, args.model)
+    compute_identity_ppls(args.identity_file, model, tokenizer, args.sofa_batch, args.model)
     score = compute_sofa_score(df_sofa, model, args.model)
 
     evaluation_results["sofa"] = float(score)
-
+    print("SOFA Score:", score)
     # ----------------------------------------------------------
     # SAVE RESULTS
     # ----------------------------------------------------------
