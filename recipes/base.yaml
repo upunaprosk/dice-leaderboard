@@ -26,6 +26,7 @@ sofa:
   split: train
   identity_file: data/sofa/identities_by_category.json
   batch_size: 512
+  max_length: 32
 
 stereoset:
   data_dir: data/stereoset
