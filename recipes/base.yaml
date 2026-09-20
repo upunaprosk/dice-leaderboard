@@ -36,7 +36,6 @@ lm_eval:
   - backend: hf
     tasks:
       - bbq
-      - hellaswag
       - simple_cooccurrence_bias
       - crows_pairs_english
     batch_size: 8
