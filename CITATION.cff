@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use the Open Diké Leaderboard, please cite this software."
+
+title: "Open Diké Leaderboard"
+type: software
+version: "0.1.0"
+
+authors:
+  - family-names: "Proskurina"
+    given-names: "Irina"
+
+repository-code: "https://github.com/upunaprosk/dice-leaderboard"
+
+abstract: >
+  Open Diké Leaderboard is an evaluation framework and leaderboard
+  for studying bias, fairness, toxicity, ethics, and safety in base
+  and instruction-tuned compressed large language models.
+
+keywords:
+  - large language models
+  - model compression
+  - fairness
+  - bias
+  - toxicity
+  - ethics
+  - safety
+  - evaluation
