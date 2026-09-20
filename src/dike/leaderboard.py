@@ -118,18 +118,44 @@ def export_leaderboard(
         else INSTRUCT_HEADER
     )
 
+    file_exists = (
+            output.exists()
+            and output.stat().st_size > 0
+    )
+
+    if file_exists:
+        with output.open(
+                "r",
+                newline="",
+                encoding="utf-8",
+        ) as file:
+            reader = csv.reader(
+                file
+            )
+
+            existing_header = next(
+                reader,
+                None,
+            )
+
+        if existing_header != header:
+            raise ValueError(
+                f"Leaderboard header does not match existing file: {output}"
+            )
+
     with output.open(
-        "w",
-        newline="",
-        encoding="utf-8",
+            "a",
+            newline="",
+            encoding="utf-8",
     ) as file:
         writer = csv.writer(
             file
         )
 
-        writer.writerow(
-            header
-        )
+        if not file_exists:
+            writer.writerow(
+                header
+            )
 
         writer.writerows(
             rows
