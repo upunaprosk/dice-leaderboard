@@ -16,10 +16,11 @@ BASE_HEADER = [
     "Model",
     "Model Recipe",
     "PPL",
-    "CP",
+    "BBQ (Acc)",
+    "CrowS-Pairs",
     "Holistic Bias",
-    "StereoSet",
     "SOFA",
+    "StereoSet",
     "Link",
 ]
 
@@ -240,7 +241,17 @@ def _base_row(
             )
         ),
 
-        # CrowS-Pairs percentage-stereotype metric
+        _fmt_percent(
+            _lm_eval_metric(
+                result,
+                task="bbq",
+                metrics=(
+                    "acc",
+                ),
+                allow_subtasks=True,
+            )
+        ),
+
         _fmt_percent(
             _lm_eval_metric(
                 result,
@@ -263,18 +274,6 @@ def _base_row(
             )
         ),
 
-        # StereoSet evaluator reports ICAT on a 0-100 scale
-        _fmt_number(
-            _evaluation_metric(
-                result,
-                "stereoset",
-                (
-                    "icat_score",
-                    "score",
-                ),
-            )
-        ),
-
         _fmt_number(
             _evaluation_metric(
                 result,
@@ -287,11 +286,19 @@ def _base_row(
             digits=3,
         ),
 
-        _model_link(
-            result
+        _fmt_number(
+            _evaluation_metric(
+                result,
+                "stereoset",
+                (
+                    "icat_score",
+                    "score",
+                ),
+            )
         ),
-    ]
 
+        _model_link(result),
+    ]
 
 def _instruct_row(
     result: dict[str, Any],
@@ -357,11 +364,8 @@ def _instruct_row(
             )
         ),
 
-        _model_link(
-            result
-        ),
+        _model_link(result),
     ]
-
 
 def _mode(
     result: dict[str, Any],
@@ -392,37 +396,21 @@ def _model_name(
         {},
     )
 
-    name = model.get(
-        "name"
-    )
-
-    source = model.get(
-        "source",
-        {},
-    )
-
-    if (
-        isinstance(source, dict)
-        and source.get("type") == "huggingface"
-        and name
-    ):
-        return str(
-            name
-        )
-
     display_name = model.get(
         "display_name"
     )
 
     if display_name:
-        return str(
-            display_name
-        )
+        return str(display_name)
 
-    return str(
-        name or ""
+    name = model.get(
+        "name"
     )
 
+    if not name:
+        return ""
+
+    return str(name).rstrip("/").split("/")[-1]
 
 def _model_recipe(
     result: dict[str, Any],
