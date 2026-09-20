@@ -1,0 +1,43 @@
+mode: base
+seed: 42
+output_dir: results
+
+evaluations:
+  - perplexity
+  - holistic_bias
+  - sofa
+  - stereoset
+
+perplexity:
+  dataset_path: wikitext
+  dataset_name: null
+  split: test
+  text_column: text
+  n_ctx: 1024
+  n_batch: 1024
+
+holistic_bias:
+  dataset: iproskurina/holisticbias-sentiment-pairs
+  split: train
+  batch_size: 64
+
+sofa:
+  dataset: iproskurina/sofa-500
+  split: train
+  identity_file: data/sofa/identities_by_category.json
+  batch_size: 512
+
+stereoset:
+  data_dir: data/stereoset
+  file_name: test.json
+  batch_size: 16
+
+lm_eval:
+  - backend: hf
+    tasks:
+      - bbq
+      - hellaswag
+      - simple_cooccurrence_bias
+      - crows_pairs_english
+    batch_size: 8
+    device: cuda:0

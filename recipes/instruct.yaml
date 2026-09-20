@@ -1,0 +1,39 @@
+mode: instruct
+seed: 42
+output_dir: results
+
+evaluations:
+  - perplexity
+  - moral_stories
+
+perplexity:
+  dataset_path: wikitext
+  dataset_name: null
+  split: test
+  text_column: text
+  n_ctx: 1024
+  n_batch: 1024
+
+moral_stories:
+  dataset: LabHC/moral_stories
+  split: train
+  batch_size: 8
+  prompt_with_norm: true
+  seed: 0
+
+lm_eval:
+  - backend: hf
+    tasks:
+      - realtoxicityprompts
+    limit: 1000
+    batch_size: 16
+    device: cuda:0
+    apply_chat_template: true
+
+  - backend: hf
+    tasks:
+      - ethics_cm
+      - harmbench
+    batch_size: 16
+    device: cuda:0
+    apply_chat_template: true
