@@ -9,12 +9,6 @@ from tqdm import tqdm
 
 
 class Perplexity:
-    """
-    Sentence-level perplexity evaluation used in (copied from evaluate.perpexity with added quantized support)
-    - Holistic Bias
-    - SOFA
-    """
-
     def _compute(
         self,
         predictions: list[str],
@@ -25,10 +19,6 @@ class Perplexity:
         device: str | None = None,
         max_length: int | None = None,
     ) -> dict[str, Any]:
-        """
-        Compute perplexity for each input
-        """
-
         if batch_size <= 0:
             raise ValueError(
                 "`batch_size` must be greater than zero."
@@ -52,31 +42,31 @@ class Perplexity:
         )
 
         try:
-            # Sentence perplexity is a likelihood/scoring operation.
             tokenizer.padding_side = "right"
+
             if (
-                tokenizer.pad_token is None
+                tokenizer.pad_token_id is None
                 and batch_size > 1
             ):
-                existing_special_tokens = list(
-                    tokenizer
-                    .special_tokens_map_extended
-                    .values()
-                )
-
-                if not existing_special_tokens:
-                    raise ValueError(
-                        "If batch_size > 1, the tokenizer must "
-                        "define at least one special token that "
-                        "can also be used for padding."
+                if tokenizer.eos_token is not None:
+                    tokenizer.pad_token = (
+                        tokenizer.eos_token
+                    )
+                else:
+                    special_tokens = list(
+                        tokenizer.all_special_tokens
                     )
 
-                tokenizer.add_special_tokens(
-                    {
-                        "pad_token":
-                            existing_special_tokens[0]
-                    }
-                )
+                    if not special_tokens:
+                        raise ValueError(
+                            "If batch_size > 1, the tokenizer must "
+                            "define a pad token, EOS token, or another "
+                            "special token that can be used for padding."
+                        )
+
+                    tokenizer.pad_token = (
+                        special_tokens[0]
+                    )
 
             if (
                 add_start_token
@@ -89,7 +79,6 @@ class Perplexity:
                         "is specified."
                     )
 
-                # Leave one position for the BOS token.
                 max_tokenized_len = (
                     max_length - 1
                 )
@@ -167,10 +156,6 @@ def _compute_perplexities(
     add_start_token: bool,
     device: str,
 ) -> list[float]:
-    """
-    Sentence perplexity evaluation
-    """
-
     perplexities: list[float] = []
 
     loss_function = CrossEntropyLoss(
@@ -197,16 +182,18 @@ def _compute_perplexities(
         attention_mask = attention_masks[
             start_index:end_index
         ]
+
         if (
             add_start_token
             and tokenizer.bos_token_id
             is not None
         ):
-            bos_tokens = torch.tensor(
-                [
-                    [tokenizer.bos_token_id]
-                ]
-                * encoded_batch.size(0),
+            bos_tokens = torch.full(
+                (
+                    encoded_batch.size(0),
+                    1,
+                ),
+                tokenizer.bos_token_id,
                 device=device,
                 dtype=encoded_batch.dtype,
             )
@@ -294,10 +281,6 @@ def _validate_inputs(
     attention_masks: torch.Tensor,
     add_start_token: bool,
 ) -> None:
-    """
-    Minimum input-length check
-    """
-
     token_counts = (
         attention_masks.sum(1)
     )
@@ -324,10 +307,6 @@ def _validate_inputs(
 def _resolve_device(
     device: str | None,
 ) -> str:
-    """
-    Resolve the device
-    """
-
     if device is None:
         return (
             "cuda"
