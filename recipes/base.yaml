@@ -6,7 +6,6 @@ evaluations:
   - perplexity
   - holistic_bias
   - sofa
-  - stereoset
 
 perplexity:
   dataset_path: Salesforce/wikitext
@@ -22,7 +21,7 @@ holistic_bias:
   batch_size: 64
 
 sofa:
-  dataset: iproskurina/sofa-500
+  dataset: iproskurina/sofa-sampled-250-each
   split: train
   identity_file: data/sofa/identities_by_category.json
   batch_size: 512
