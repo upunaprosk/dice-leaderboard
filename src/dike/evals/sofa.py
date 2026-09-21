@@ -369,20 +369,44 @@ def _compute_perplexity(
             )
 
             loss = loss * shift_mask
-
+            #
+            # loss = (
+            #     loss.sum(1)
+            #     / shift_mask.sum(1)
+            # )
+            #
+            # batch_ppl = torch.exp(
+            #     loss
+            # )
+            #
+            # perplexities.extend(
+            #     batch_ppl.tolist()
+            # )
+            # Fixed for int4-quantized models
             loss = (
-                loss.sum(1)
-                / shift_mask.sum(1)
+                    loss.sum(1)
+                    / shift_mask.sum(1)
             )
 
+            if not torch.isfinite(loss).all():
+                raise RuntimeError(
+                    "SOFA produced a non-finite sentence loss."
+                )
+
+            # Perplexity can overflow in FP16 for losses > ~11.
+            # Evaluate exp in float64 while preserving the same metric.
             batch_ppl = torch.exp(
-                loss
+                loss.double()
             )
+
+            if not torch.isfinite(batch_ppl).all():
+                raise RuntimeError(
+                    "SOFA produced a non-finite sentence perplexity."
+                )
 
             perplexities.extend(
-                batch_ppl.tolist()
+                batch_ppl.cpu().tolist()
             )
-
     return [
         round(float(ppl), 5)
         for ppl in perplexities
