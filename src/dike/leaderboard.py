@@ -20,7 +20,6 @@ BASE_HEADER = [
     "CrowS-Pairs",
     "Holistic Bias",
     "SOFA",
-    "StereoSet",
     "Link",
 ]
 
