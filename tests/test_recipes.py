@@ -3,9 +3,7 @@ from pathlib import Path
 from dike.config import load_recipe
 
 
-ROOT = Path(
-    __file__
-).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_base_recipe():
@@ -19,7 +17,6 @@ def test_base_recipe():
         "perplexity",
         "holistic_bias",
         "sofa",
-        "stereoset",
     ]
 
     assert len(config.lm_eval) == 1
@@ -28,8 +25,6 @@ def test_base_recipe():
         config.lm_eval[0].tasks
     ) == {
         "bbq",
-        "hellaswag",
-        "simple_cooccurrence_bias",
         "crows_pairs_english",
     }
 

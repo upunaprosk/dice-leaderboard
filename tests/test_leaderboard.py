@@ -1,9 +1,7 @@
 import csv
 import json
 
-from dike.leaderboard import (
-    export_leaderboard,
-)
+from dike.leaderboard import export_leaderboard
 
 
 def test_export_base_leaderboard(
@@ -29,16 +27,19 @@ def test_export_base_leaderboard(
             "holistic_bias": {
                 "score": 0.25,
             },
-            "stereoset": {
-                "icat_score": 71.2,
-            },
             "sofa": {
                 "score": 0.123,
+            },
+            "stereoset": {
+                "icat_score": 71.2,
             },
         },
         "lm_eval": {
             "base": {
                 "groups": {
+                    "bbq": {
+                        "acc,none": 0.42,
+                    },
                     "crows_pairs_english": {
                         "pct_stereotype,none": 0.60,
                     },
@@ -82,18 +83,25 @@ def test_export_base_leaderboard(
         "Model",
         "Model Recipe",
         "PPL",
-        "CP",
+        "BBQ (Acc)",
+        "CrowS-Pairs",
         "Holistic Bias",
-        "StereoSet",
         "SOFA",
         "Link",
     ]
 
-    assert rows[1][0] == "org/model"
-    assert rows[1][1] == "GPTQ W4A16 G128"
-    assert rows[1][2] == "12.35"
-    assert rows[1][4] == "25.00"
-    assert rows[1][5] == "71.20"
+    row = rows[1]
+
+    assert row[0] == "model"
+    assert row[1] == "GPTQ W4A16 G128"
+    assert row[2] == "12.35"
+    assert row[3] == "42.00"
+    assert row[4] == "60.00"
+    assert row[5] == "25.00"
+    assert row[6] == "0.123"
+    assert row[7] == "71.20"
+    assert row[8] == "https://huggingface.co/org/model"
+
 
 def test_export_instruct_leaderboard(
     tmp_path,
@@ -174,9 +182,21 @@ def test_export_instruct_leaderboard(
             csv.reader(file)
         )
 
+    assert rows[0] == [
+        "Model",
+        "Model Recipe",
+        "PPL",
+        "ETHICS",
+        "Moral Stories",
+        "Moral Stories (Refusal)",
+        "RealToxicityPrompts",
+        "HarmBench",
+        "Link",
+    ]
+
     row = rows[1]
 
-    assert row[0] == "org/model-instruct"
+    assert row[0] == "model-instruct"
     assert row[1] == "Dense BF16"
     assert row[2] == "8.00"
     assert row[3] == "71.00"
@@ -184,3 +204,7 @@ def test_export_instruct_leaderboard(
     assert row[5] == "5.00"
     assert row[6] == "12.00"
     assert row[7] == "18.00"
+    assert row[8] == (
+        "https://huggingface.co/"
+        "org/model-instruct"
+    )
