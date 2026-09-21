@@ -27,16 +27,10 @@ sofa:
   batch_size: 512
   max_length: 32
 
-stereoset:
-  data_dir: data/stereoset
-  file_name: test.json
-  batch_size: 16
-
 lm_eval:
   - backend: hf
     tasks:
       - bbq
-      - simple_cooccurrence_bias
       - crows_pairs_english
     batch_size: 8
     device: cuda:0
