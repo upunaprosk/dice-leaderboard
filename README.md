@@ -24,7 +24,7 @@ Evaluation framework for the [Open Diké Leaderboard](https://huggingface.co/spa
 
 The Open Diké Leaderboard is designed to evaluate how model compression affects bias, fairness, ethical alignment, and safety in large language model outputs.
 
-The code supports evaluation of:
+The leaderboard is organized into two evaluation tracks, presented as separate subpages:
 
 * **Base models**
 * **Instruction-tuned models**
@@ -37,7 +37,7 @@ Model and compression metadata are detected automatically when available.
 
 ## Evaluation
 
-### Base models
+### Base models metrics
 
 Defined in `recipes/base.yaml`.
 
@@ -49,7 +49,7 @@ Defined in `recipes/base.yaml`.
 | **Holistic Bias** | Negative-sentiment preference rate (**closer to 50% is better**)            |
 | **SOFA**          | Social fairness bias score (**lower is better**)                      |
 
-### Instruction-tuned models
+### Instruction-tuned models metrics
 
 Defined in `recipes/instruct.yaml`.
 
