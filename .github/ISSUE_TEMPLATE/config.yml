@@ -1,0 +1,10 @@
+blank_issues_enabled: true
+
+contact_links:
+  - name: Contribution guidelines
+    url: https://github.com/upunaprosk/dice-leaderboard/blob/main/CONTRIBUTING.md
+    about: Read how to evaluate and submit a model to the Open Diké Leaderboard.
+
+  - name: Open Diké Leaderboard
+    url: https://huggingface.co/spaces/LabHC/dike-leaderboard
+    about: Check whether the model or compression recipe is already evaluated.

@@ -1,0 +1,126 @@
+name: Model evaluation request
+description: Request evaluation support for a model or report a model that cannot be evaluated with the standard Open Diké pipeline.
+title: "[Model] "
+labels:
+  - model-evaluation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for models that require evaluation support, special loading configuration, or another change before they can be submitted to the Open Diké Leaderboard.
+
+        If the model already works with the standard pipeline, please run the evaluation and submit the generated result through a pull request instead.
+
+  - type: input
+    id: model
+    attributes:
+      label: Model
+      description: Hugging Face model repository or public model URL.
+      placeholder: meta-llama/Llama-3.2-3B
+    validations:
+      required: true
+
+  - type: dropdown
+    id: track
+    attributes:
+      label: Evaluation track
+      options:
+        - Base
+        - Instruct
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: model_type
+    attributes:
+      label: Model recipe
+      description: Select the closest model or compression type.
+      options:
+        - Dense
+        - GPTQ
+        - AWQ
+        - BitsAndBytes INT4
+        - BitsAndBytes INT8
+        - SparseGPT
+        - Wanda
+        - compressed-tensors
+        - Sparse + quantized
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: revision
+    attributes:
+      label: Model revision
+      description: Branch, tag, or commit if a specific revision is required.
+      placeholder: main
+
+  - type: input
+    id: tokenizer
+    attributes:
+      label: Tokenizer
+      description: Complete this only if the tokenizer differs from the model repository.
+      placeholder: meta-llama/Llama-2-7b-hf
+
+  - type: input
+    id: tokenizer_revision
+    attributes:
+      label: Tokenizer revision
+      description: Complete this only if a specific tokenizer revision is required.
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Command used
+      description: Paste the exact dike command you attempted.
+      render: shell
+      placeholder: |
+        dike eval \
+          --model MODEL_NAME \
+          --mode base
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe what prevents the model from being evaluated.
+      placeholder: The model fails to load because...
+    validations:
+      required: true
+
+  - type: textarea
+    id: traceback
+    attributes:
+      label: Error or traceback
+      description: Paste the relevant error output, if available.
+      render: shell
+
+  - type: input
+    id: hardware
+    attributes:
+      label: Hardware
+      description: GPU or other hardware used for the evaluation.
+      placeholder: NVIDIA A100 80GB
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Relevant Python, operating system, CUDA, or package information.
+      placeholder: |
+        OS:
+        Python:
+        CUDA:
+        DICE version:
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I checked that the model is not already represented on the leaderboard with the same recipe.
+          required: true
+        - label: I attempted to use the standard Open Diké evaluation pipeline before opening this issue.
+          required: true
