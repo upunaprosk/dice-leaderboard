@@ -1,10 +1,8 @@
 <div align="center">
 
-<img
-src="./logo.jpeg"
-alt="Diké"
-width="100"
-/>
+<p align="center">
+  <img src="./logo.png" alt="Open Diké" width="140">
+</p>
 
 # Open Diké Leaderboard
 
