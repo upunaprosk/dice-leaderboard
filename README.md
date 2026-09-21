@@ -14,8 +14,13 @@ Evaluation framework for the [Open Diké Leaderboard](https://huggingface.co/spa
 
 🤗 **[View the Open Diké Leaderboard on Hugging Face](https://huggingface.co/spaces/LabHC/dike-leaderboard)**
 
-</div>
+[![Tests](https://github.com/upunaprosk/dice-leaderboard/actions/workflows/tests.yml/badge.svg)](https://github.com/upunaprosk/dice-leaderboard/actions/workflows/tests.yml)
+[![Release](https://img.shields.io/github/v/release/upunaprosk/dice-leaderboard)](https://github.com/upunaprosk/dice-leaderboard/releases)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)](https://www.python.org/)
+[![License](https://img.shields.io/github/license/upunaprosk/dice-leaderboard)](LICENSE)
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97-Hugging%20Face-yellow)](https://huggingface.co/spaces/LabHC/dike-leaderboard)
 
+</div>
 
 
 ---
