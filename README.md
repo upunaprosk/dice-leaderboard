@@ -22,21 +22,6 @@ Evaluation framework for the [Open Diké Leaderboard](https://huggingface.co/spa
 
 ---
 
-## Overview
-
-The Open Diké Leaderboard is designed to evaluate how model compression affects bias, fairness, ethical alignment, and safety in large language model outputs.
-
-The leaderboard is organized into two evaluation tracks:
-
-* **Base models**
-* **Instruction-tuned models**
-
-Dense and compressed models are supported, including GPTQ, AWQ, BitsAndBytes INT4/INT8, sparse models, and hybrid compression recipes.
-
-Model and compression metadata are detected automatically when available.
-
----
-
 ## Contribute a model
 
 The Open Diké Leaderboard accepts community model evaluations.
