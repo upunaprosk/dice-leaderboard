@@ -54,13 +54,14 @@ class Perplexity:
         previous_pad_token = (
             tokenizer.pad_token
         )
-
         try:
             tokenizer.padding_side = "right"
 
+            needs_padding = len(predictions) > 1
+
             if (
-                tokenizer.pad_token_id is None
-                and batch_size > 1
+                    tokenizer.pad_token_id is None
+                    and needs_padding
             ):
                 if tokenizer.eos_token is not None:
                     tokenizer.pad_token = (
@@ -105,10 +106,9 @@ class Perplexity:
             encodings = tokenizer(
                 predictions,
                 add_special_tokens=False,
-                padding=True,
+                padding=needs_padding,
                 truncation=(
-                    max_tokenized_len
-                    is not None
+                        max_tokenized_len is not None
                 ),
                 max_length=max_tokenized_len,
                 return_tensors="pt",
