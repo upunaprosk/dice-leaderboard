@@ -19,6 +19,20 @@ class Perplexity:
         device: str | None = None,
         max_length: int | None = None,
     ) -> dict[str, Any]:
+
+        if add_start_token:
+            if tokenizer.bos_token_id is None:
+                raise ValueError(
+                    "add_start_token=True requires a tokenizer "
+                    "with a BOS token. Set add_start_token=False "
+                    "for models without BOS."
+                )
+
+        if max_length is not None and max_length < 2:
+            raise ValueError(
+                "`max_length` must be at least 2."
+            )
+
         if batch_size <= 0:
             raise ValueError(
                 "`batch_size` must be greater than zero."
