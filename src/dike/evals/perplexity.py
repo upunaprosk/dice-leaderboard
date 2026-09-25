@@ -473,12 +473,11 @@ def evaluate(
         n_batch=n_batch,
     )
 
-    average_perplexity = float(
-        np.mean(perplexities)
-    )
+    final_perplexity = float(perplexities[-1])
+
 
     return {
-        "score": average_perplexity,
+        "score": final_perplexity,
         "dataset_path": dataset_path,
         "dataset_name": evaluator.dataset_name,
         "split": split,
