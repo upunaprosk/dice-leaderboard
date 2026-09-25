@@ -4,7 +4,9 @@
 Thank you for your interest in contributing to the Open Diké Leaderboard!
 Open Diké is an open leaderboard for evaluating bias, fairness, ethics, and safety in dense and compressed language models.
 We welcome community evaluations of new models, compression methods, and model configurations.
+
 **Accepted evaluation submissions are added to the public [Open Diké Leaderboard](https://huggingface.co/spaces/LabHC/dike-leaderboard), making the results openly accessible to the research community.**
+
 All leaderboard submissions must follow the official Open Diké evaluation protocol to ensure reproducibility and comparability across models.
 
 ## What can be contributed?
