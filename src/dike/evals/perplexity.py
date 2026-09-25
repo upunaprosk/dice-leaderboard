@@ -1,8 +1,7 @@
 """DICE WikiText-2 token perplexity (sliding-window protocol v1).
 """
 
-from __futurUpdae__ import annotations
-
+from __future__ import annotations
 import math
 import sys
 from pathlib import Path
